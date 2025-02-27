@@ -111,7 +111,7 @@ class VRange(WriteOnlyVar):
 
 class AgilentE3640A_GUI(Instrument_GUI):
     def __init__(self, rm: pyvisa.ResourceManager, *args, **kwargs):
-        super().__init__(name="Agilent E3640A", instr=AgilentE3640A(), rm=rm, *args, **kwargs)
+        super().__init__(name="Agilent E3640A", instr=AgilentE3640A(rm=rm), *args, **kwargs)
         self.window()
         self.layout.alignment = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter
         

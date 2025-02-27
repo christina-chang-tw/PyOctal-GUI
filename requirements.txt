@@ -1,0 +1,4 @@
+pyoctal >= 0.0.4
+pyvisa
+pywin32; sys_platform == "cygwin" or sys_platform == "win32"
+PySide6

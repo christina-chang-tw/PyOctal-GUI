@@ -113,10 +113,9 @@ class Address(WriteOnlyVar):
 
 
 class Instrument_GUI(QWidget):
-    def __init__(self, name, instr, rm, addr=None):
+    def __init__(self, name, instr, addr=None):
         super().__init__()
         self.instr = instr
-        self.rm = rm
         self.read_channel = Channel()
         
         self.layout = QVBoxLayout(self)

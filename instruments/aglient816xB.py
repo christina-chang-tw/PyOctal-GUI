@@ -143,8 +143,8 @@ class AverageTime(WriteOnlyVar):
 
 
 class Agilent816xB_GUI(Instrument_GUI):
-    def __init__(self, name: str, instr, rm: pyvisa.ResourceManager, *args, **kwargs):
-        super().__init__(name=name, instr=instr, rm=rm, *args, **kwargs)
+    def __init__(self, name: str, instr, *args, **kwargs):
+        super().__init__(name=name, instr=instr, *args, **kwargs)
         self.window()
         self.layout.alignment = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter
         
@@ -189,11 +189,11 @@ class Agilent816xB_GUI(Instrument_GUI):
 class Agilent8164B_GUI(Agilent816xB_GUI):
     def __init__(self, rm: pyvisa.ResourceManager, *args, **kwargs):
         super().__init__(name="Agilent 8164B",
-                         instr=Agilent8164B(), rm=rm, *args, **kwargs)
+                         instr=Agilent8164B(rm=rm), *args, **kwargs)
 
         
 
 class Agilent8163B_GUI(Agilent816xB_GUI):
     def __init__(self, rm: pyvisa.ResourceManager, *args, **kwargs):
         super().__init__(name="Agilent 8163B",
-                         instr=Agilent8163B(), rm=rm, *args, **kwargs)
+                         instr=Agilent8163B(rm=rm), *args, **kwargs)
