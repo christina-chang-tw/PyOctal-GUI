@@ -4,8 +4,8 @@ from typing import Dict
 
 from PySide6 import QtCore
 from PySide6.QtWidgets import QApplication, QLabel,QWidget, QHBoxLayout, QDialog, QVBoxLayout, QDialogButtonBox, QComboBox, QPushButton, QLineEdit, QFileDialog, QListView, QStackedWidget, QSizePolicy
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QIcon
 import pyvisa
 
 from instruments import Agilent8163B_GUI, Agilent8164B_GUI, AgilentE3640A_GUI
@@ -18,11 +18,11 @@ class Instrument:
         "AgilentE3640A": AgilentE3640A_GUI,
     }
     
-    def __init__(self, row: int, name: str, instr_type: str, rm: pyvisa.ResourceManager, addr: str="", active: bool=False):
+    def __init__(self, row: int, name: str, instr_type: str, rm: pyvisa.ResourceManager, active: bool=False):
         self.row = row
         self.id = name
         self.instr_type = instr_type
-        self._gui = self.instrument_map[instr_type](rm=rm, addr=addr)
+        self._gui = self.instrument_map[instr_type](rm=rm)
         self.active = active
 
     @property
@@ -31,16 +31,18 @@ class Instrument:
     
     def to_dict(self):
         """Convert instrument object to dictionary for saving."""
-        return {"row": self.row, "id": self.id, "type": self.instr_type, "address": self.gui.addr}
+        return {"row": self.row, "id": self.id, "type": self.instr_type, "addr": self._gui.addr}
 
     @classmethod
     def from_dict(cls, data: Dict, rm: pyvisa.ResourceManager):
         """Create an Instrument object from a dictionary."""
-        return cls(data["row"], data["id"], data["type"], rm=rm, addr=data["address"], active=False)
+        instr = cls(data["row"], data["id"], data["type"], rm=rm, active=False)
+        instr.gui.addr = data["addr"]
+        return instr
 
 
 class InstrSelectionDialog(QDialog):
-    """Dialog for selecting an instrument to add to the list."""
+    """The popped up dialog for selecting an instrument to add to the list."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Instrument")
@@ -68,6 +70,7 @@ class InstrSelectionDialog(QDialog):
         layout.addWidget(button_box)
 
     def get_selected_instrument(self):
+        """ Get the selected instrument name and type."""
         instrument_type = self.combo_box.currentText()
         name = self.name.text().strip()
         name = name if name else self.combo_box.currentText()
@@ -75,6 +78,7 @@ class InstrSelectionDialog(QDialog):
     
 
 class MyMainWidget(QWidget):
+    """ Main widget for the application."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Instrument controller")
@@ -83,7 +87,11 @@ class MyMainWidget(QWidget):
         self.rm = pyvisa.ResourceManager()
         self.instrs = []
         
-
+        self.icon = QIcon()
+        self.icon.addFile("owl.png")
+        self.setWindowIcon(self.icon)
+        
+        # Instrument list layout
         self.select_container = QWidget(self)
         self.select_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.select_layout = QVBoxLayout(self.select_container)
@@ -97,7 +105,7 @@ class MyMainWidget(QWidget):
         self.model.itemChanged.connect(self.handle_checkbox_toggle)
         self.select_layout.addWidget(self.list_view)
         
-        # button layout
+        # button layout under the list
         button_layout = QHBoxLayout()
         self.save_button = QPushButton("Save", parent=self)
         self.save_button.clicked.connect(self.save_state)
@@ -119,12 +127,12 @@ class MyMainWidget(QWidget):
         self.select_layout.addLayout(button_layout)
         self.layout.addWidget(self.select_container)
 
+        # Stacked widget for instrument GUIs
         self.instr_stack = QStackedWidget(self)
         self.instr_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         placeholder = QLabel("No Instrument Selected")
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.instr_stack.addWidget(placeholder)
-        
         
         self.layout.addWidget(self.instr_stack)
         self.layout.setStretch(0, 1)
